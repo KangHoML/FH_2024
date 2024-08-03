@@ -1,0 +1,27 @@
+CUDA_VISIBLE_DEVICES="0" python3 ./main.py --mode train \
+                                     --in_file_trn_dialog ./data/ddata.wst.txt.2023.08.29 \
+                                     --in_file_fashion ./data/mdata.wst.txt.2023.08.23 \
+                                     --in_dir_img_feats ./data/img_feats \
+                                     --subWordEmb_path ./sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat \
+                                     --model_path ./model \
+                                     --req_net_type memn2n \
+                                     --eval_net_type tf \
+                                     --mem_size 32 \
+                                     --key_size 300 \
+                                     --hops 3 \
+                                     --eval_node [600,4000,4000] \
+                                     --tf_dropout 0.3 \
+                                     --tf_nhead 4 \
+                                     --tf_ff_dim 4096 \
+                                     --tf_num_layers 4 \
+                                     --epochs 500 \
+                                     --save_freq 10 \
+                                     --batch_size 100 \
+                                     --learning_rate 0.0005 \
+                                     --max_grad_norm 20.0 \
+                                     --use_multimodal True \
+                                     --use_dropout True \
+                                     --use_input_mask False \
+                                     --eval_zero_prob 0.5 \
+                                     --corr_thres 0.9 \
+
