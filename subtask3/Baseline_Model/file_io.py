@@ -1,32 +1,3 @@
-'''
-AI Fashion Coordinator
-(Baseline For Fashion-How Challenge)
-
-MIT License
-
-Copyright (C) 2023, Integrated Intelligence Research Section, ETRI
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-Update: 2022.06.16.
-'''
-
 import sys
 import numpy as np
 import csv
@@ -56,10 +27,12 @@ def _load_fashion_item(in_file, coordi_size, meta_size):
         for l in fin.readlines():
             line = l.strip()
             w = line.split()
+            
             name = w[0]
             if name != prev_name:
                 names.append(name)
                 prev_name = name
+            
             feat = w[3]
             if feat != prev_feat:
                 if prev_feat != '':
@@ -70,17 +43,18 @@ def _load_fashion_item(in_file, coordi_size, meta_size):
                 prev_feat = feat
             else:
                 for d in w[4:]:
-                    data += ' ' + d
+                    data += ' ' + d 
+        
         metadata.append(data)
         for i in range(coordi_size*meta_size):
             metadata.append('')
+        
         # add null types    
         names.append('NONE-OUTER')
         names.append('NONE-TOP')
         names.append('NONE-BOTTOM')
         names.append('NONE-SHOES')
     return names, metadata
-
 
 def _position_of_fashion_item(item):
     """
@@ -688,14 +662,17 @@ def make_metadata(in_file_fashion, swer, coordi_size, meta_size,
     print('\n<Make metadata>')
     if not os.path.exists(in_file_fashion):
         raise ValueError('{} do not exists.'.format(in_file_fashion))
-    # load metadata DB    
+    
+    # load metadata DB
     name, data_item = _load_fashion_item(in_file_fashion, 
                                          coordi_size, meta_size)
     print('vectorizing data')
     emb_size = swer.get_emb_size()
+
     # embedding    
     vec_item = _vectorize_dlg(swer, data_item)
     vec_item = vec_item.reshape((-1, meta_size*emb_size))
+
     # categorize fashion items    
     slot_name, slot_item = _categorize(name, vec_item, coordi_size)
     slot_feat = None
@@ -703,6 +680,7 @@ def make_metadata(in_file_fashion, swer, coordi_size, meta_size,
         slot_feat = _load_fashion_feature(in_file_img_feats, 
                                     slot_name, coordi_size, feat_size)
     vec_similarities = []
+    
     # calculation cosine similarities
     for i in range(coordi_size):
         item_sparse = sparse.csr_matrix(slot_item[i])
