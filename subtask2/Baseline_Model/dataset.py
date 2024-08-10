@@ -108,7 +108,7 @@ class BackGround(object):
 class ETRIDataset_color(torch.utils.data.Dataset):
     """ Dataset containing color category. """
     
-    def __init__(self, df, base_path):
+    def __init__(self, df, base_path, target_per_class = 1500):
         self.df = df
         self.base_path = base_path
         # self.bbox_crop = BBoxCrop()
@@ -122,6 +122,48 @@ class ETRIDataset_color(torch.utils.data.Dataset):
                                                 std=[1 / 0.229, 1 / 0.224, 1 / 0.225])
         self.to_pil = transforms.ToPILImage()
 
+        self.target_per_class = target_per_class
+        self.expanded_image_paths = []
+        self.expanded_labels = []
+        self.expand_dataset()
+
+
+    def augument(self):
+        classes = self.df['Color'].unique()
+        for cls in classes:
+            cls_data = self.df[self.df['Color'] == cls]
+            cls_count = len(cls_data)
+            if cls_count < self.target_size:
+                #augument
+                pass
+            else:
+                #random sampling
+                pass
+
+    def expand_dataset(self):
+        class_dict = {}
+        
+        # 클래스별로 이미지 분류
+        for i, label in enumerate(self.labels):
+            if label not in class_dict:
+                class_dict[label] = []
+            class_dict[label].append(self.image_paths[i])
+        
+        # 각 클래스에 대해 균등하게 50개로 확장
+        for label, paths in class_dict.items():
+            num_samples = len(paths)
+            if num_samples >= self.target_per_class:
+                # 이미 충분한 데이터가 있는 경우 랜덤하게 샘플링
+                sampled_paths = random.sample(paths, self.target_per_class)
+                self.expanded_image_paths.extend(sampled_paths)
+                self.expanded_labels.extend([label] * self.target_per_class)
+            else:
+                # 데이터가 부족한 경우 증강을 통해 확장
+                for i in range(self.target_per_class):
+                    path = paths[i % num_samples]  # 순환하면서 이미지 선택
+                    self.expanded_image_paths.append(path)
+                    self.expanded_labels.append(label)
+
 
     def __getitem__(self, i):
         sample = self.df.iloc[i]
@@ -129,19 +171,15 @@ class ETRIDataset_color(torch.utils.data.Dataset):
         if image.shape[2] != 3:
             image = color.rgba2rgb(image)
         color_label = sample['Color']
-        # # crop only if bbox info is available
-        # try:
-        #     bbox_xmin = sample['BBox_xmin']
-        #     bbox_ymin = sample['BBox_ymin']
-        #     bbox_xmax = sample['BBox_xmax']
-        #     bbox_ymax = sample['BBox_ymax']
-    
-        #     image = self.bbox_crop(image, bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax)
-        # except:
-        #     pass
-        image = self.background(image, None)
 
+    
+
+        image = self.background(image, None)
         image_ = image.copy()
+
+        
+
+
 
         image_ = self.to_tensor(image_)
         image_ = self.normalize(image_)

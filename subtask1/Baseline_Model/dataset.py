@@ -88,21 +88,21 @@ class BackGround(object):
             return new_image
 
 
-# class BBoxCrop(object):
-#     """ Operator that crops according to the given bounding box coordinates. """
+class BBoxCrop(object):
+    """ Operator that crops according to the given bounding box coordinates. """
 
-#     def __call__(self, image, x_1, y_1, x_2, y_2):
-#         h, w = image.shape[:2]
+    def __call__(self, image, x_1, y_1, x_2, y_2):
+        h, w = image.shape[:2]
 
-#         top = y_1
-#         left = x_1
-#         new_h = y_2 - y_1
-#         new_w = x_2 - x_1
+        top = y_1
+        left = x_1
+        new_h = y_2 - y_1
+        new_w = x_2 - x_1
 
-#         image = image[top: top + new_h,
-#                       left: left + new_w]
+        image = image[top: top + new_h,
+                      left: left + new_w]
 
-#         return image
+        return image
 
 
 class ETRIDataset_emo(torch.utils.data.Dataset):
@@ -111,7 +111,7 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
     def __init__(self, df, base_path):
         self.df = df
         self.base_path = base_path
-        # self.bbox_crop = BBoxCrop()
+        self.bbox_crop = BBoxCrop()
         self.background = BackGround(224)
         self.to_tensor = transforms.ToTensor()
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -123,6 +123,53 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
         self.to_pil = transforms.ToPILImage()
 
 
+    def __getitem__(self, i):
+        origin_idx = i//2
+        sample = self.df.iloc[origin_idx]
+        image = io.imread(self.base_path + sample['image_name'])
+        if image.shape[2] != 3:
+            image = color.rgba2rgb(image)
+        daily_label = sample['Daily']
+        gender_label = sample['Gender']
+        embel_label = sample['Embellishment']
+
+        if(i%2 == 1):
+            # crop only if bbox info is available
+            try:
+                bbox_xmin = sample['BBox_xmin']
+                bbox_ymin = sample['BBox_ymin']
+                bbox_xmax = sample['BBox_xmax']
+                bbox_ymax = sample['BBox_ymax']
+        
+                image = self.bbox_crop(image, bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax)
+            except:
+                image = self.background(image, None)
+        else:
+            image = self.background(image, None)
+
+        image_ = image.copy()
+
+        image_ = self.to_tensor(image_)
+        image_ = self.normalize(image_)
+        image_ = image_.float()
+
+        ret = {}
+        ret['ori_image'] = image
+        ret['image'] = image_
+        ret['daily_label'] = daily_label
+        ret['gender_label'] = gender_label
+        ret['embel_label'] = embel_label
+
+        return ret
+
+    def __len__(self):
+        return len(self.df)*2
+
+
+
+
+
+'''
     def __getitem__(self, i):
         sample = self.df.iloc[i]
         image = io.imread(self.base_path + sample['image_name'])
@@ -160,3 +207,4 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.df)
+'''
