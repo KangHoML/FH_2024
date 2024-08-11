@@ -30,6 +30,7 @@ import torch.utils.data
 import numpy as np
 from torchvision import transforms
 from skimage import io, transform, color
+import random
 
 class BackGround(object):
     """Operator that resizes to the desired size while maintaining the ratio
@@ -108,7 +109,7 @@ class BackGround(object):
 class ETRIDataset_color(torch.utils.data.Dataset):
     """ Dataset containing color category. """
     
-    def __init__(self, df, base_path, target_per_class = 1500):
+    def __init__(self, df, base_path, target_per_class = 2000):
         self.df = df
         self.base_path = base_path
         # self.bbox_crop = BBoxCrop()
@@ -125,7 +126,10 @@ class ETRIDataset_color(torch.utils.data.Dataset):
         self.target_per_class = target_per_class
         self.expanded_image_paths = []
         self.expanded_labels = []
-        self.expand_dataset()
+        self.transforms = transforms.Compose([
+            transforms.RandomRotation(10),
+            transforms.RandomHorizontalFlip()
+        ])
 
 
     def augument(self):
@@ -134,7 +138,7 @@ class ETRIDataset_color(torch.utils.data.Dataset):
             cls_data = self.df[self.df['Color'] == cls]
             cls_count = len(cls_data)
             if cls_count < self.target_size:
-                #augument
+                sampled_d = cls_data.sample(n=5000, replace=True, random_state=42)
                 pass
             else:
                 #random sampling
@@ -144,43 +148,44 @@ class ETRIDataset_color(torch.utils.data.Dataset):
         class_dict = {}
         
         # 클래스별로 이미지 분류
-        for i, label in enumerate(self.labels):
+        for i, row in self.df.iterrows():
+            label = row['Color']  # CSV에서 라벨이 있는 열 이름을 지정하세요
+            image_path = row['image_name']  # CSV에서 이미지 경로가 있는 열 이름을 지정하세요
+
             if label not in class_dict:
                 class_dict[label] = []
-            class_dict[label].append(self.image_paths[i])
-        
+            class_dict[label].append(image_path)
+                
         # 각 클래스에 대해 균등하게 50개로 확장
-        for label, paths in class_dict.items():
-            num_samples = len(paths)
+        for label, image in class_dict.items():
+            num_samples = len(image)
             if num_samples >= self.target_per_class:
                 # 이미 충분한 데이터가 있는 경우 랜덤하게 샘플링
-                sampled_paths = random.sample(paths, self.target_per_class)
+                sampled_paths = random.sample(image, self.target_per_class)
                 self.expanded_image_paths.extend(sampled_paths)
                 self.expanded_labels.extend([label] * self.target_per_class)
             else:
-                # 데이터가 부족한 경우 증강을 통해 확장
-                for i in range(self.target_per_class):
-                    path = paths[i % num_samples]  # 순환하면서 이미지 선택
-                    self.expanded_image_paths.append(path)
-                    self.expanded_labels.append(label)
+                path = image
+                repeat = self.target_per_class // num_samples
+                for i in range(repeat -1):
+                    path.append(image)                   
+                path.append(random.sample(image, self.target_per_class % num_samples))  # 순환하면서 이미지 선택
+                self.expanded_image_paths.append(path)
+                self.expanded_labels.append(label)
 
 
     def __getitem__(self, i):
-        sample = self.df.iloc[i]
-        image = io.imread(self.base_path + sample['image_name'])
-        if image.shape[2] != 3:
-            image = color.rgba2rgb(image)
-        color_label = sample['Color']
+        image_path = self.expanded_image_paths[i]
+        color_label = self.expanded_labels[i]
 
-    
+        image = io.imread(self.base_path + image_path)
+        if image.shape[2] != 3:
+            image = color.rgba2rgb(image)  
 
         image = self.background(image, None)
         image_ = image.copy()
 
-        
-
-
-
+        image_ = self.transforms(image_)
         image_ = self.to_tensor(image_)
         image_ = self.normalize(image_)
         image_ = image_.float()
