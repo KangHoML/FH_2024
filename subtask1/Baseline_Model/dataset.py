@@ -135,17 +135,14 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
 
         if(i%2 == 1):
             # crop only if bbox info is available
-            try:
-                bbox_xmin = sample['BBox_xmin']
-                bbox_ymin = sample['BBox_ymin']
-                bbox_xmax = sample['BBox_xmax']
-                bbox_ymax = sample['BBox_ymax']
-        
-                image = self.bbox_crop(image, bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax)
-            except:
-                image = self.background(image, None)
-        else:
-            image = self.background(image, None)
+            bbox_xmin = sample['BBox_xmin']
+            bbox_ymin = sample['BBox_ymin']
+            bbox_xmax = sample['BBox_xmax']
+            bbox_ymax = sample['BBox_ymax']
+    
+            image = self.bbox_crop(image, bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax)
+
+        image = self.background(image, None)
 
         image_ = image.copy()
 

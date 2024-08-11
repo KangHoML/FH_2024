@@ -130,19 +130,7 @@ class ETRIDataset_color(torch.utils.data.Dataset):
             transforms.RandomRotation(10),
             transforms.RandomHorizontalFlip()
         ])
-
-
-    def augument(self):
-        classes = self.df['Color'].unique()
-        for cls in classes:
-            cls_data = self.df[self.df['Color'] == cls]
-            cls_count = len(cls_data)
-            if cls_count < self.target_size:
-                sampled_d = cls_data.sample(n=5000, replace=True, random_state=42)
-                pass
-            else:
-                #random sampling
-                pass
+        self.expand_dataset()
 
     def expand_dataset(self):
         class_dict = {}
@@ -168,10 +156,10 @@ class ETRIDataset_color(torch.utils.data.Dataset):
                 path = image
                 repeat = self.target_per_class // num_samples
                 for i in range(repeat -1):
-                    path.append(image)                   
-                path.append(random.sample(image, self.target_per_class % num_samples))  # 순환하면서 이미지 선택
-                self.expanded_image_paths.append(path)
-                self.expanded_labels.append(label)
+                    path.extend(image)
+                path.extend(random.sample(image, self.target_per_class % num_samples))  # 순환하면서 이미지 선택
+                self.expanded_image_paths.extend(path)
+                self.expanded_labels.extend([label] * self.target_per_class)
 
 
     def __getitem__(self, i):
@@ -198,4 +186,4 @@ class ETRIDataset_color(torch.utils.data.Dataset):
         return ret
 
     def __len__(self):
-        return len(self.df)
+        return 19 * self.target_per_class

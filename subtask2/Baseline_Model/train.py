@@ -69,8 +69,8 @@ def main():
 
     net = Baseline_MNet_color().to(DEVICE)
 
-    df = pd.read_csv('./Dataset/Fashion-How24_sub2_train.csv')
-    train_dataset = ETRIDataset_color(df, base_path='./Dataset/train/')
+    df = pd.read_csv('../Dataset/Fashion-How24_sub2_train.csv')
+    train_dataset = ETRIDataset_color(df, base_path='../Dataset/train/')
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=a.batch_size, shuffle=True, num_workers=0)
 
     optimizer = torch.optim.Adam(net.parameters(), lr=a.lr)

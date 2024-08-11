@@ -75,8 +75,8 @@ def main():
     # net = Baseline_ResNet_emo().to(DEVICE)
     net = Baseline_MNet_emo().to(DEVICE)
 
-    df = pd.read_csv('./Dataset/Fashion-How24_sub1_train.csv')
-    train_dataset = ETRIDataset_emo(df, base_path='./Dataset/train/')
+    df = pd.read_csv('../Dataset/Fashion-How24_sub1_train.csv')
+    train_dataset = ETRIDataset_emo(df, base_path='../Dataset/train/')
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=a.batch_size, shuffle=True, num_workers=0)
 
     optimizer = torch.optim.Adam(net.parameters(), lr=a.lr)
