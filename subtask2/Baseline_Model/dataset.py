@@ -109,12 +109,12 @@ class BackGround(object):
 class ETRIDataset_color(torch.utils.data.Dataset):
     """ Dataset containing color category. """
     
-    def __init__(self, df, base_path, target_per_class = 2000):
+    def __init__(self, df, base_path, target_per_class = 800):
         self.df = df
         self.base_path = base_path
         # self.bbox_crop = BBoxCrop()
         self.background = BackGround(224)
-        self.to_tensor = transforms.ToTensor()
+        # self.to_tensor = transforms.ToTensor()
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                               std=[0.229, 0.224, 0.225])
 
@@ -123,17 +123,22 @@ class ETRIDataset_color(torch.utils.data.Dataset):
                                                 std=[1 / 0.229, 1 / 0.224, 1 / 0.225])
         self.to_pil = transforms.ToPILImage()
 
+        self.label_cnt = 18
         self.target_per_class = target_per_class
         self.expanded_image_paths = []
         self.expanded_labels = []
         self.transforms = transforms.Compose([
+            transforms.ToTensor() ,
+            transforms.ToPILImage(),
             transforms.RandomRotation(10),
-            transforms.RandomHorizontalFlip()
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor() 
         ])
         self.expand_dataset()
 
     def expand_dataset(self):
         class_dict = {}
+        self.label_cnt = 0
         
         # 클래스별로 이미지 분류
         for i, row in self.df.iterrows():
@@ -142,6 +147,7 @@ class ETRIDataset_color(torch.utils.data.Dataset):
 
             if label not in class_dict:
                 class_dict[label] = []
+                self.label_cnt += 1
             class_dict[label].append(image_path)
                 
         # 각 클래스에 대해 균등하게 50개로 확장
@@ -153,13 +159,14 @@ class ETRIDataset_color(torch.utils.data.Dataset):
                 self.expanded_image_paths.extend(sampled_paths)
                 self.expanded_labels.extend([label] * self.target_per_class)
             else:
-                path = image
+                path = []
                 repeat = self.target_per_class // num_samples
-                for i in range(repeat -1):
-                    path.extend(image)
+                path.extend(image * repeat)
                 path.extend(random.sample(image, self.target_per_class % num_samples))  # 순환하면서 이미지 선택
                 self.expanded_image_paths.extend(path)
                 self.expanded_labels.extend([label] * self.target_per_class)
+
+        assert len(self.expanded_image_paths) == len(self.expanded_labels), "Mismatch between image paths and labels!"
 
 
     def __getitem__(self, i):
@@ -174,7 +181,7 @@ class ETRIDataset_color(torch.utils.data.Dataset):
         image_ = image.copy()
 
         image_ = self.transforms(image_)
-        image_ = self.to_tensor(image_)
+        # image_ = self.to_tensor(image_)
         image_ = self.normalize(image_)
         image_ = image_.float()
 
@@ -186,7 +193,7 @@ class ETRIDataset_color(torch.utils.data.Dataset):
         return ret
 
     def __len__(self):
-        return 19 * self.target_per_class
+        return self.label_cnt * self.target_per_class
 
 
 
