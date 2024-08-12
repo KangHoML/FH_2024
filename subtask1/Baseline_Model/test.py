@@ -33,7 +33,7 @@ SOFTWARE.
 Update: 2022.04.20.
 '''
 
-from dataset import ETRIDataset_emo
+from dataset import *
 from networks import ResExtractor, Baseline_ResNet_emo, Baseline_MNet_emo
 
 import pandas as pd
@@ -53,12 +53,12 @@ def main():
     # net = Baseline_ResNet_emo().to(DEVICE)
     # trained_weights = torch.load('./model/Baseline_ResNet_emo/model_100.pt', map_location=DEVICE)
     net = Baseline_MNet_emo().to(DEVICE)
-    trained_weights = torch.load('./model/Baseline_MNet_emo/model_1.pt', map_location=DEVICE)
+    trained_weights = torch.load('./model/Baseline_MNet_emo/model_30.pt', map_location=DEVICE)
     net.load_state_dict(trained_weights)
     
     # 아래 경로는 포함된 샘플(validation set)의 경로로, 실제 추론환경에서의 경로는 task.ipynb를 참고 바랍니다. 
-    df = pd.read_csv('./Dataset/Fashion-How24_sub1_val.csv') # 샘플 경로입니다. 
-    val_dataset = ETRIDataset_emo(df, base_path='./Dataset/val/') # 샘플 경로입니다.
+    df = pd.read_csv('../Dataset/Fashion-How24_sub1_val.csv') # 샘플 경로입니다. 
+    val_dataset = ETRIDataset_emo_test(df, base_path='../Dataset/val/') # 샘플 경로입니다.
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=0)
 
     daily_gt_list = np.array([])

@@ -48,7 +48,7 @@ import torch.utils.data.distributed
 parser = argparse.ArgumentParser()
 parser.add_argument("--version", type=str, default='Baseline_MNet_emo')
 # parser.add_argument("--version", type=str, default='Baseline_ResNet_emo')
-parser.add_argument('--epochs', default=100, type=int, metavar='N',
+parser.add_argument('--epochs', default=30, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--lr', default=0.0001, type=float, metavar='N',
                     help='learning rate')

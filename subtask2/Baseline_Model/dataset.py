@@ -187,3 +187,57 @@ class ETRIDataset_color(torch.utils.data.Dataset):
 
     def __len__(self):
         return 19 * self.target_per_class
+
+
+
+class ETRIDataset_color_test(torch.utils.data.Dataset):
+    """ Dataset containing color category. """
+    
+    def __init__(self, df, base_path):
+        self.df = df
+        self.base_path = base_path
+        # self.bbox_crop = BBoxCrop()
+        self.background = BackGround(224)
+        self.to_tensor = transforms.ToTensor()
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                              std=[0.229, 0.224, 0.225])
+
+        # for vis
+        self.unnormalize = transforms.Normalize(mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225],
+                                                std=[1 / 0.229, 1 / 0.224, 1 / 0.225])
+        self.to_pil = transforms.ToPILImage()
+
+
+    def __getitem__(self, i):
+        sample = self.df.iloc[i]
+        image = io.imread(self.base_path + sample['image_name'])
+        if image.shape[2] != 3:
+            image = color.rgba2rgb(image)
+        color_label = sample['Color']
+        # # crop only if bbox info is available
+        # try:
+        #     bbox_xmin = sample['BBox_xmin']
+        #     bbox_ymin = sample['BBox_ymin']
+        #     bbox_xmax = sample['BBox_xmax']
+        #     bbox_ymax = sample['BBox_ymax']
+    
+        #     image = self.bbox_crop(image, bbox_xmin, bbox_ymin, bbox_xmax, bbox_ymax)
+        # except:
+        #     pass
+        image = self.background(image, None)
+
+        image_ = image.copy()
+
+        image_ = self.to_tensor(image_)
+        image_ = self.normalize(image_)
+        image_ = image_.float()
+
+        ret = {}
+        ret['ori_image'] = image
+        ret['image'] = image_
+        ret['color_label'] = color_label
+
+        return ret
+
+    def __len__(self):
+        return len(self.df)

@@ -6,3 +6,8 @@ subtask1/Baseline_Model/Dataset/
 subtask2/Baseline_Model/Dataset/
 subtask1/Dataset/
 subtask2/Dataset/
+*.pt
+*.zip
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/

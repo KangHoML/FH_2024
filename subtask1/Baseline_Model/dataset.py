@@ -165,8 +165,24 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
 
 
 
+class ETRIDataset_emo_test(torch.utils.data.Dataset):
+    """ Dataset containing emotion categories (Daily, Gender, Embellishment). """
 
-'''
+    def __init__(self, df, base_path):
+        self.df = df
+        self.base_path = base_path
+        self.bbox_crop = BBoxCrop()
+        self.background = BackGround(224)
+        self.to_tensor = transforms.ToTensor()
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                              std=[0.229, 0.224, 0.225])
+
+        # for vis
+        self.unnormalize = transforms.Normalize(mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225],
+                                                std=[1 / 0.229, 1 / 0.224, 1 / 0.225])
+        self.to_pil = transforms.ToPILImage()
+
+
     def __getitem__(self, i):
         sample = self.df.iloc[i]
         image = io.imread(self.base_path + sample['image_name'])
@@ -204,4 +220,4 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.df)
-'''
+

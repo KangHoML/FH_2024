@@ -26,7 +26,7 @@ SOFTWARE.
 
 Update: 2022.04.20.
 '''
-from dataset import ETRIDataset_color
+from dataset import *
 from networks import *
 
 import pandas as pd
@@ -49,7 +49,7 @@ def main():
 
     # 아래 경로는 포함된 샘플(validation set)의 경로로, 실제 추론환경에서의 경로는 task.ipynb를 참고 바랍니다. 
     df = pd.read_csv('./Dataset/Fashion-How24_sub2_val.csv')
-    val_dataset = ETRIDataset_color(df, base_path='./Dataset/val/')
+    val_dataset = ETRIDataset_color_test(df, base_path='./Dataset/val/')
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=0)
 
     gt_list = np.array([])
