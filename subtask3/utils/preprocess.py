@@ -1,6 +1,7 @@
 import copy
 import random
 import numpy as np
+
 from typing import List, Dict
 
 def replace_coordi(source: Dict, num_coordi: int, img2id: Dict, id2img: Dict, img_similarity: Dict, top_k: int):
@@ -113,9 +114,9 @@ class Augmentation:
 
                 # 첫 번째 추천 코디는 유지
                 if source_idx == 0:
-                    data = {"desc": desc, "coordi": [coordi[0]] + [coordi[np.random.randint(1,3)]] + [add], "reward": reward}
+                    data = {"description": desc, "coordi": [coordi[0]] + [coordi[np.random.randint(1,3)]] + [add], "reward": reward}
                 else:
-                    data = {"desc": desc, "coordi": coordi[:source_idx] + [add] + coordi[source_idx + 1:], "reward": reward}
+                    data = {"description": desc, "coordi": coordi[:source_idx] + [add] + coordi[source_idx + 1:], "reward": reward}
                 dataset.append(data)
         
         # rank를 무작위로 선택하여 데이터 증강

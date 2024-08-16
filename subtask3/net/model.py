@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn 
 
-from policy import PolicyNet
-from requirement import RequirementNet
+from net.policy import PolicyNet
+from net.requirement import RequirementNet
 
 class Model(nn.Module):
     """ Model for AI fashion coordinator """
