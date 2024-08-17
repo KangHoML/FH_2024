@@ -26,6 +26,10 @@ from torch.optim import SGD, Adam, AdamW
 from torch.nn.utils.clip_grad import clip_grad_norm_
 from si import update_omega, surrogate_loss
 
+# device setting
+cores = os.cpu_count()
+torch.set_num_threads(cores)
+
 # SI parameter
 si_c = 0.1
 epsilon = 0.001
@@ -52,7 +56,7 @@ parser.add_argument('--meta_path', type=str, default='subtask3/mdata.wst.txt.202
 parser.add_argument('--train_diag_path', type=str, default='subtask3/task1.ddata.wst.txt')
 
 # -- data
-parser.add_argument('--num_aug', type=int, defualt=3)
+parser.add_argument('--num_aug', type=int, default=3)
 parser.add_argument('--top_k', type=int, default=50)
 parser.add_argument('--batch_size', type=int, default=16)
 
@@ -79,6 +83,19 @@ parser.add_argument('--weight_decay', type=float, default=1e-3)
 parser.add_argument('--epoch', type=int, default=10)
 parser.add_argument('--max_grad_norm', type=float, default=40.0)
 parser.add_argument('--save_freq', type=int, default=2)
+
+def get_udevice():
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        num_gpu = torch.cuda.device_count()
+    else:    
+        device = torch.device('cpu')
+    print('Using device: {}'.format(device))
+
+    if torch.cuda.is_available():
+        print('# of GPU: {}'.format(num_gpu))
+    
+    return device
 
 def get_optimizer():
     # optimizer type 설정
@@ -119,7 +136,7 @@ def train():
     set_seed(args.seed)
 
     # Device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = get_udevice()
     print(f"\nDevice: {device}")
 
     # Subword Embedding
