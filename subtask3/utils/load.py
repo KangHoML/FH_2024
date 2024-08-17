@@ -109,7 +109,7 @@ class MetaLoader:
 
         return img2id, id2img, img_similarity
     
-class TrainLoader:
+class DialogueTrainLoader:
     def __init__(self, path: str):
         self.path = path
 
