@@ -42,7 +42,7 @@ class ResExtractor(nn.Module):
     def __init__(self, resnetnum='50', pretrained=True):
         super(ResExtractor, self).__init__()
 
-        if resnetnum == '18':
+        if resnetnum == '18':                               #subtask2는 외부    Pretrained 모델 허용X
             self.resnet = models.resnet18(pretrained=pretrained)
         elif resnetnum == '34':
             self.resnet = models.resnet34(pretrained=pretrained)

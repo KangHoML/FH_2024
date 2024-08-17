@@ -121,6 +121,7 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
         self.unnormalize = transforms.Normalize(mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225],
                                                 std=[1 / 0.229, 1 / 0.224, 1 / 0.225])
         self.to_pil = transforms.ToPILImage()
+        self.sharpness = transforms.RandomAdjustSharpness(2, p=0.3) #increase sharpness
 
 
     def __getitem__(self, i):
@@ -148,6 +149,7 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
 
         image_ = self.to_tensor(image_)
         image_ = self.normalize(image_)
+        image_ = self.sharpness(image_)     #increase sharpness
         image_ = image_.float()
 
         ret = {}

@@ -59,21 +59,25 @@ parser.add_argument('-b', '--batch-size', default=64, type=int,
                          'using Data Parallel or Distributed Data Parallel')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
+parser.add_argument('--load', default=False, type=bool,
+                    help='load the pretrained model weight')
 
 a, _ = parser.parse_known_args()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def main():
     """ The main function for model training. """
-    if os.path.exists('model') is False:
-        os.makedirs('model')
+    if os.path.exists('../model') is False:
+        os.makedirs('../model')
 
-    save_path = 'model/' + a.version
+    save_path = '../model/' + a.version + '/' + time.strftime('%m-%d', time.localtime())
     if os.path.exists(save_path) is False:
         os.makedirs(save_path)
 
     # net = Baseline_ResNet_emo().to(DEVICE)
     net = Baseline_MNet_emo().to(DEVICE)
+    if a.load : 
+        net.load_state_dict(torch.load("model/Baseline_MNet_emo/model_30.pt"))       # address of model data, you need to update before load model weight
 
     df = pd.read_csv('../Dataset/Fashion-How24_sub1_train.csv')
     train_dataset = ETRIDataset_emo(df, base_path='../Dataset/train/')
@@ -121,6 +125,7 @@ def main():
 
         if ((epoch + 1) % 10 == 0):
             print('Saving Model....')
+
             torch.save(net.state_dict(), save_path + '/model_' + str(epoch + 1) + '.pt')
             print('OK.')
 

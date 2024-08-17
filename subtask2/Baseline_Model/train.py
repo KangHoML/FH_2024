@@ -46,7 +46,7 @@ parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--lr', default=0.0001, type=float, metavar='N',
                     help='learning rate')
-parser.add_argument('-b', '--batch-size', default=64, type=int,
+parser.add_argument('-b', '--batch-size', default=32, type=int,
                     metavar='N',
                     help='mini-batch size (default: 64), this is the total '
                          'batch size of all GPUs on the current node when '
@@ -59,13 +59,13 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def main():
     """ The main function for model training. """
-    if os.path.exists('model') is False:
-        os.makedirs('model')
+    if os.path.exists('../model') is False:
+        os.makedirs('../model')
 
-    save_path = 'model/' + a.version
-    # save_path = 'model/' + time.strftime('%m-%d', time.localtime()) + '/' + a.version
-    # if os.path.exists(save_path) is False:
-    #     os.makedirs(save_path)
+
+    save_path = '../model/' + a.version + '/' + time.strftime('%m-%d', time.localtime())
+    if os.path.exists(save_path) is False:
+        os.makedirs(save_path)
 
     net = Baseline_MNet_color().to(DEVICE)
 

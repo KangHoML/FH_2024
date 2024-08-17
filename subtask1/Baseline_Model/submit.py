@@ -16,7 +16,7 @@ def etri_task1_submit():
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     net = Baseline_MNet_emo().to(DEVICE)
-    trained_weights = torch.load('./model/Baseline_MNet_emo/model_30.pt', map_location=DEVICE) # 자기 모델 경로를 지정합니다
+    trained_weights = torch.load('model/model_20.pt', map_location=DEVICE) # 자기 모델 경로를 지정합니다
     net.load_state_dict(trained_weights)
     df = pd.read_csv('/aif/Dataset/Fashion-How24_sub1_test.csv') # 제출 시 데이터 경로 준수. /aif/ 아래에 있습니다.
     val_dataset = ETRIDataset_emo_test(df, base_path='/aif/Dataset/test/') # 제출 시 데이터 경로 준수. /aif/ 아래에 있습니다.
@@ -58,7 +58,7 @@ import time
 t = time.time()
 if __name__ == "__main__":
     #-----------------------------------------------------#
-    aif.submit(model_name="baseline_task1",             # 본인의 모델명 입력(버전 관리에 용이하게끔 편의에 맞게 지정합니다)
+    aif.submit(model_name="augument_sharpness",             # 본인의 모델명 입력(버전 관리에 용이하게끔 편의에 맞게 지정합니다)
                key="5db975da-7cc5-4b68-88b0-b2ad90576d42",                                   # 본인의 task key 입력
                func=submit                                 # 3.에서 wrapping한 submit function
                )
