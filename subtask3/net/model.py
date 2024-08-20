@@ -31,5 +31,4 @@ class Model(nn.Module):
         """
         req = self._requirement(dlg)
         logits = self._policy(req, crd)
-        preds = torch.argmax(logits, 1)
-        return logits, preds
+        return logits

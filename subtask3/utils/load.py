@@ -1,4 +1,5 @@
 import copy
+import random
 import pandas as pd
 import numpy as np
 
@@ -200,3 +201,92 @@ class DialogueTrainLoader:
             idx += 1    
 
         return description, coordi, reward
+    
+class DialogueTestLoader:
+    def __init__(self, path, eval, num_rank):
+        self.path = path
+        self.eval = eval
+        self.num_rank = num_rank
+
+    def get_dataset(self) -> List:
+        raw_data = self._load()
+        stories = self._split(raw_data)
+
+        dataset = []
+        for story in stories:
+            if self.eval:
+                desc, coordi, reward = self._extract_coordi(story)
+                data = {"description": desc, "coordi": coordi, "reward": reward}
+            else:
+                desc, coordi = self._extract_coordi(story)
+                data = {"description": desc, "coordi": coordi}
+            dataset.append(data)
+            
+        return dataset
+
+    def _load(self) -> List:
+        with open(self.path, encoding='euc-kr', mode='r') as f:
+            lines = f.readlines()
+
+        return lines
+    
+    def _split(self, data: List) -> List:
+        # ';' 로 시작하는 부분 인트로로 저장
+        intro_ids = []
+        for i, d in enumerate(data):
+            if d[0] == ';':
+                intro_ids.append(i)
+
+        # ';' 기준으로 대화 구분
+        stories = []
+        for i in range(len(intro_ids) - 1):
+            prev, cur = intro_ids[i], intro_ids[i+1]
+            stories.append(data[prev:cur])
+        
+        # 마지막 남은 대화 추가
+        stories.append(data[intro_ids[i+1]:])
+
+        return stories
+    
+    def _extract_coordi(self, story: List) -> Any:
+        # 대화 부분 저장
+        description = [line.split('\t')[1].strip() for line in story[1:-3]]
+        
+        # 코디 저장
+        coordi = [line.split('\t')[1].strip() for line in story[-3:]]
+
+        # 추천된 코디를 O, T, B, S 순서대로 정렬
+        coordi = self._sort(coordi)
+
+        if self.eval:
+            # 첫 번째 추천에 편향되지 않도록 rank를 shuffle
+            coordi, ranks = self._shuffle(coordi)
+            return description, coordi, ranks
+        else:
+            return description, coordi
+
+
+    def _sort(self, coordi: List) -> List:
+        # O, T, B, S 순서로 정렬
+        sorted_coordi = []
+        for c in coordi:
+            sorted_coordi.append({position_of_fashion_item(item): item for item in c.split()})
+        
+        # 더미 라벨 추가
+        sorted_coordi = [self._add_dummy(c) for c in sorted_coordi]
+
+        return sorted_coordi
+
+    def _shuffle(self, coordi: List) -> Tuple[List, List]:
+        ranks = list(range(self.num_rank))
+        random.shuffle(ranks)
+        
+        coordi = [coordi[r] for r in ranks]
+        return coordi, ranks
+    
+    def _add_dummy(self, item: Dict) -> Dict:
+        for i, label in enumerate(["NONE-OUTER", "NONE-TOP", "NONE-BOTTOM", "NONE-SHOES"]):
+            if i not in item:
+                item[i] = label
+        
+        return item

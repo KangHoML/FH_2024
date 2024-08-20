@@ -205,7 +205,6 @@ def train():
             W[n] = p.data.clone().zero_()
             p_old[n] = p.data.clone()
     
-    
     # train
     train_losses, ce_losses, si_losses = [], [], []
     best_loss = float('inf')
@@ -222,7 +221,7 @@ def train():
 
             optimizer.zero_grad()
 
-            logits, _ = net(desc, coordi)
+            logits = net(desc, coordi)
             loss_ce = criterion(logits, rank) * args.batch_size
 
             if args.use_cl:
@@ -274,7 +273,7 @@ def train():
     update_omega(net, device, W, epsilon)
 
     # 최종 모델 저장
-    torch.save(net.state_dict(), f'./pth/model_{args.seed}_final.pt')
+    torch.save(net.state_dict(), f'./pth/model_final.pt')
 
     # Loss 그래프
     plot_loss(train_losses, ce_losses, si_losses)
