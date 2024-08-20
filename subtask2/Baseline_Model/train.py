@@ -67,7 +67,9 @@ def main():
     if os.path.exists(save_path) is False:
         os.makedirs(save_path)
 
-    net = Baseline_MNet_color().to(DEVICE)
+    # net = Baseline_MNet_color().to(DEVICE)
+    # net = ColorCNN().to(DEVICE)
+    net = Baseline_ResNet_color().to(DEVICE)
 
     df = pd.read_csv('../Dataset/Fashion-How24_sub2_train.csv')
     train_dataset = ETRIDataset_color(df, base_path='../Dataset/train/')
@@ -96,7 +98,7 @@ def main():
             loss.backward()
             optimizer.step()
 
-            if (i + 1) % 10 == 0:
+            if i % 50 == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Time : {:2.3f}'
                       .format(epoch + 1, a.epochs, i + 1, total_step, loss.item(), time.time() - t0))
 

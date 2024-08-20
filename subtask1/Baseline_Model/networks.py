@@ -87,12 +87,12 @@ class Baseline_ResNet_emo(nn.Module):
     def __init__(self):
         super(Baseline_ResNet_emo, self).__init__()
 
-        self.encoder = ResExtractor('18')
+        self.encoder = ResExtractor('50')
         self.avg_pool = nn.AvgPool2d(kernel_size=7)
 
-        self.daily_linear = nn.Linear(512, 7)
-        self.gender_linear = nn.Linear(512, 6)
-        self.embel_linear = nn.Linear(512, 3)
+        self.daily_linear = nn.Linear(2048, 7)
+        self.gender_linear = nn.Linear(2048, 6)
+        self.embel_linear = nn.Linear(2048, 3)
 
     def forward(self, x):
         """ Forward propagation with input 'x' """

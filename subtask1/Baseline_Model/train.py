@@ -48,7 +48,7 @@ import torch.utils.data.distributed
 parser = argparse.ArgumentParser()
 parser.add_argument("--version", type=str, default='Baseline_MNet_emo')
 # parser.add_argument("--version", type=str, default='Baseline_ResNet_emo')
-parser.add_argument('--epochs', default=30, type=int, metavar='N',
+parser.add_argument('--epochs', default=50, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--lr', default=0.0001, type=float, metavar='N',
                     help='learning rate')
@@ -75,7 +75,7 @@ def main():
         os.makedirs(save_path)
 
     # net = Baseline_ResNet_emo().to(DEVICE)
-    net = Baseline_MNet_emo().to(DEVICE)
+    net = Baseline_ResNet_emo().to(DEVICE)
     if a.load : 
         net.load_state_dict(torch.load("model/Baseline_MNet_emo/model_30.pt"))       # address of model data, you need to update before load model weight
 
@@ -109,7 +109,7 @@ def main():
             loss.backward()
             optimizer.step()
 
-            if (i + 1) % 10 == 0:
+            if i % 50 == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, '
                       'Loss_daily: {:.4f}, Loss_gender: {:.4f}, Loss_embel: {:.4f}, Time : {:2.3f}'
                       .format(epoch + 1, a.epochs, i + 1, total_step, loss.item(), 

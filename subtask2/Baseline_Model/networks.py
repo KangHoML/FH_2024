@@ -26,8 +26,10 @@ SOFTWARE.
 
 Update: 2024.04.20.
 '''
+import torch
 import torch.nn as nn
 import torchvision.models as models
+import torch.nn.functional as F
 
 class ResExtractor(nn.Module):
     """Feature extractor based on ResNet structure
@@ -85,7 +87,7 @@ class Baseline_ResNet_color(nn.Module):
     def __init__(self):
         super(Baseline_ResNet_color, self).__init__()
 
-        self.encoder = ResExtractor('18')
+        self.encoder = ResExtractor('50')
         self.avg_pool = nn.AvgPool2d(kernel_size=7)
         self.color_linear = nn.Linear(512, 19)
 
@@ -122,3 +124,100 @@ class Baseline_MNet_color(nn.Module):
 
 if __name__ == '__main__':
     pass
+
+
+
+
+class ColorCNN(nn.Module):
+    def __init__(self):
+        super(ColorCNN, self).__init__()
+        # First base network
+        self.conv1_1 = nn.Conv2d(3, 48, kernel_size=11, stride=4, padding=2)
+        self.norm1_1 = nn.LocalResponseNorm(5, alpha=0.0001, beta=0.75, k=2)
+        self.pool1_1 = nn.MaxPool2d(kernel_size=3, stride=2)
+        
+        self.conv2_1 = nn.Conv2d(48, 128, kernel_size=5, stride=1, padding=2)
+        self.norm2_1 = nn.LocalResponseNorm(5, alpha=0.0001, beta=0.75, k=2)
+        self.pool2_1 = nn.MaxPool2d(kernel_size=3, stride=2)
+        
+        self.conv3_1 = nn.Conv2d(128, 192, kernel_size=3, stride=1, padding=1)
+        
+        self.conv4_1 = nn.Conv2d(192, 192, kernel_size=3, stride=1, padding=1)
+        
+        self.conv5_1 = nn.Conv2d(192, 128, kernel_size=3, stride=1, padding=1)
+        self.pool5_1 = nn.MaxPool2d(kernel_size=3, stride=2)
+        
+        # Second base network (same architecture)
+        self.conv1_2 = nn.Conv2d(3, 48, kernel_size=11, stride=4, padding=2)
+        self.norm1_2 = nn.LocalResponseNorm(5, alpha=0.0001, beta=0.75, k=2)
+        self.pool1_2 = nn.MaxPool2d(kernel_size=3, stride=2)
+        
+        self.conv2_2 = nn.Conv2d(48, 128, kernel_size=5, stride=1, padding=2)
+        self.norm2_2 = nn.LocalResponseNorm(5, alpha=0.0001, beta=0.75, k=2)
+        self.pool2_2 = nn.MaxPool2d(kernel_size=3, stride=2)
+        
+        self.conv3_2 = nn.Conv2d(128, 192, kernel_size=3, stride=1, padding=1)
+        
+        self.conv4_2 = nn.Conv2d(192, 192, kernel_size=3, stride=1, padding=1)
+        
+        self.conv5_2 = nn.Conv2d(192, 128, kernel_size=3, stride=1, padding=1)
+        self.pool5_2 = nn.MaxPool2d(kernel_size=3, stride=2)
+        
+        # Fully connected layers
+        self.fc1 = nn.Linear(128 * 2 * 6 * 6, 4096)
+        self.dropout1 = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(4096, 4096)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc3 = nn.Linear(4096, 19)  # 8 output classes for color recognition
+        
+    def forward(self, x):
+        # Forward pass for the first base network
+        x1 = self.conv1_1(x['image'])
+        x1 = self.pool1_1(self.norm1_1(F.relu(x1)))
+        x1 = self.pool2_1(self.norm2_1(F.relu(self.conv2_1(x1))))
+        x1 = F.relu(self.conv3_1(x1))
+        x1 = F.relu(self.conv4_1(x1))
+        x1 = self.pool5_1(F.relu(self.conv5_1(x1)))
+        
+        # Forward pass for the second base network
+        x2 = self.conv1_2(x['image'])
+        x2 = self.pool1_2(self.norm1_2(F.relu(x2)))
+        x2 = self.pool2_2(self.norm2_2(F.relu(self.conv2_2(x2))))
+        x2 = F.relu(self.conv3_2(x2))
+        x2 = F.relu(self.conv4_2(x2))
+        x2 = self.pool5_2(F.relu(self.conv5_2(x2)))
+        
+        # Concatenate the outputs of the two base networks
+        x_concat = torch.cat((x1, x2), dim=1)
+        x_concat = x_concat.view(x_concat.size(0), -1)  # Flatten
+        
+        # Fully connected layers
+        x_concat = F.relu(self.fc1(x_concat))
+        x_concat = self.dropout1(x_concat)
+        x_concat = F.relu(self.fc2(x_concat))
+        x_concat = self.dropout2(x_concat)
+        x_concat = self.fc3(x_concat)
+        
+        return x_concat
+
+class ColorLinear(nn.Module):
+    def __init__(self):
+        super(ColorCNN, self).__init__()
+        self.pointconv = nn.Conv2d(3,3, kernel_size=3, stride=1, padding=1)
+
+
+
+
+    def forward(self,x):
+        return x
+
+
+if __name__ == "__main__":
+    # Example usage
+    model = ColorCNN()
+    print(model)
+
+    # Assuming an input image of size 227x227x3
+    input_tensor = torch.randn(1, 3, 224, 224)
+    output = model(input_tensor)
+    print(output)

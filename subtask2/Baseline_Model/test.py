@@ -43,13 +43,14 @@ def main():
     """ The main function of the test process for performance measurement. """
     # net = Baseline_ResNet_color().to(DEVICE)
     # trained_weights = torch.load('./model/Baseline_ResNet_color/model_100.pt',map_location=DEVICE)
-    net = Baseline_MNet_color().to(DEVICE)
-    trained_weights = torch.load('./model/Baseline_MNet_color/model_1.pt',map_location=DEVICE)
+    # net = Baseline_MNet_color().to(DEVICE)
+    net = ColorCNN().to(DEVICE)
+    trained_weights = torch.load('../model/ColorCNN/08-18/model_50.pt',map_location=DEVICE)
     net.load_state_dict(trained_weights)
 
     # 아래 경로는 포함된 샘플(validation set)의 경로로, 실제 추론환경에서의 경로는 task.ipynb를 참고 바랍니다. 
-    df = pd.read_csv('./Dataset/Fashion-How24_sub2_val.csv')
-    val_dataset = ETRIDataset_color_test(df, base_path='./Dataset/val/')
+    df = pd.read_csv('../Dataset/Fashion-How24_sub2_val.csv')
+    val_dataset = ETRIDataset_color_test(df, base_path='../Dataset/val/')
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=0)
 
     gt_list = np.array([])

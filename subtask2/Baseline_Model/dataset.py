@@ -113,7 +113,7 @@ class ETRIDataset_color(torch.utils.data.Dataset):
         self.df = df
         self.base_path = base_path
         # self.bbox_crop = BBoxCrop()
-        self.background = BackGround(224)
+        self.background = BackGround(227)
         # self.to_tensor = transforms.ToTensor()
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                               std=[0.229, 0.224, 0.225])
@@ -123,7 +123,7 @@ class ETRIDataset_color(torch.utils.data.Dataset):
                                                 std=[1 / 0.229, 1 / 0.224, 1 / 0.225])
         self.to_pil = transforms.ToPILImage()
 
-        self.label_cnt = 18
+        self.label_cnt = 19
         self.target_per_class = target_per_class
         self.expanded_image_paths = []
         self.expanded_labels = []
