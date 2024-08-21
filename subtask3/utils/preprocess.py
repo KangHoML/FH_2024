@@ -2,9 +2,12 @@ import copy
 import random
 import numpy as np
 
+import copy
+import random
+import numpy as np
 from typing import List, Dict
 
-def replace_coordi(source: Dict, num_coordi: int, img2id: Dict, id2img: Dict, img_similarity: Dict, top_k: int):
+def replace_coordi(source: Dict, num_coordi: int, img2id: Dict, id2img: Dict, img_similarity: Dict, threshold: float):
     # 더미가 아닌 카테고리 추출
     trg = [i for i in range(num_coordi) if "NONE" not in source[i]]
 
@@ -16,10 +19,17 @@ def replace_coordi(source: Dict, num_coordi: int, img2id: Dict, id2img: Dict, im
     img_id = img2id[trg_id][trg_img]
     img_sim = img_similarity[trg_id][img_id]
 
-    # 유사도 높은 상위 top_k개 중 하나 랜덤 선택 (0은 자기 자신이므로 제외)
-    sorted_sim = np.argsort(img_sim)[::-1][1:]
-    sel_id = sorted_sim[np.random.randint(top_k)]
-    sel_img = id2img[trg_id][sel_id]
+    # 임계값 기반으로 선택
+    valid_indices = np.where(img_sim > threshold)[0]
+    valid_indices = valid_indices[valid_indices != img_id]
+    
+    # 임계값
+    if len(valid_indices) > 0:
+        sel_id = np.random.choice(valid_indices)
+        sel_img = id2img[trg_id][sel_id]
+    else:
+        print(f"No similar items exceeding the threshold ({threshold}) found.")
+        sel_img = trg_img
 
     # 교체
     add = copy.deepcopy(source)
@@ -28,10 +38,10 @@ def replace_coordi(source: Dict, num_coordi: int, img2id: Dict, id2img: Dict, im
     return add
 
 class Preprocessor:
-    def __init__(self, num_rank: int, num_coordi: int, top_k: int):
+    def __init__(self, num_rank: int, num_coordi: int, threshold: float):
         self.num_rank = num_rank
         self.num_coordi = num_coordi
-        self.top_k = top_k
+        self.threshold = threshold
 
     def __call__(self, train_dataset: List, img2id: Dict, id2img: Dict, img_similarity: Dict) -> List:
         dataset = []
@@ -74,7 +84,7 @@ class Preprocessor:
                     source = coordi_unique[source_idx]
 
                     # 유사도 기반으로 대체된 코디 추가
-                    add = replace_coordi(source, self.num_coordi, img2id, id2img, img_similarity, self.top_k)
+                    add = replace_coordi(source, self.num_coordi, img2id, id2img, img_similarity, self.threshold)
                     add_coordi.append(add)    
                 data = {"description": desc, "coordi": coordi_unique + add_coordi, "reward": 0}            
             dataset.append(data)
@@ -89,11 +99,11 @@ class Preprocessor:
         return True
 
 class Augmentation:
-    def __init__(self, num_aug: int, num_rank: int, num_coordi: int, top_k: int):
+    def __init__(self, num_aug: int, num_rank: int, num_coordi: int, threshold: float):
         self.num_aug = num_aug
         self.num_rank = num_rank
         self.num_coordi = num_coordi
-        self.top_k = top_k
+        self.threshold = threshold
     
     def __call__(self, train_dataset: List, img2id: Dict, id2img: Dict, img_similarity: Dict) -> List:
         dataset = []
@@ -110,13 +120,13 @@ class Augmentation:
                 source = coordi[source_idx]
 
                 # 유사도 기반으로 대체된 코디 추가
-                add = replace_coordi(source, self.num_coordi, img2id, id2img, img_similarity, self.top_k)
+                add = replace_coordi(source, self.num_coordi, img2id, id2img, img_similarity, self.threshold)
 
                 # 첫 번째 추천 코디는 유지
                 if source_idx == 0:
-                    data = {"description": desc, "coordi": [coordi[0]] + [coordi[np.random.randint(1,3)]] + [add], "reward": reward}
+                    data = {"desc": desc, "coordi": [coordi[0]] + [coordi[np.random.randint(1,3)]] + [add], "reward": reward}
                 else:
-                    data = {"description": desc, "coordi": coordi[:source_idx] + [add] + coordi[source_idx + 1:], "reward": reward}
+                    data = {"desc": desc, "coordi": coordi[:source_idx] + [add] + coordi[source_idx + 1:], "reward": reward}
                 dataset.append(data)
         
         # rank를 무작위로 선택하여 데이터 증강
@@ -138,6 +148,3 @@ class Augmentation:
         reward = ranks.index(0)
 
         return {"description": desc, "coordi": coordi, "reward": reward}
-
-
-        

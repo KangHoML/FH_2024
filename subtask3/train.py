@@ -57,7 +57,7 @@ parser.add_argument('--train_diag_path', type=str, default='subtask3/task1.ddata
 
 # -- data
 parser.add_argument('--num_aug', type=int, default=3)
-parser.add_argument('--top_k', type=int, default=50)
+parser.add_argument('--threshold', type=float, default=0.7)
 parser.add_argument('--batch_size', type=int, default=16)
 
 # -- model
@@ -151,11 +151,11 @@ def train():
     train_raw_dataset = train_diag_loader.get_dataset()
 
     # Preprocess
-    preprocessor = Preprocessor(num_rank=3, num_coordi=4, top_k=args.top_k)
+    preprocessor = Preprocessor(num_rank=3, num_coordi=4, threshold=args.threshold)
     train_dataset = preprocessor(train_raw_dataset, img2id, id2img, img_similarity)
 
     # Augmentation
-    augmentation = Augmentation(num_aug=args.num_aug, num_rank=3, num_coordi=4, top_k=args.top_k)
+    augmentation = Augmentation(num_aug=args.num_aug, num_rank=3, num_coordi=4, threshold=args.threshold)
     train_dataset = augmentation(train_dataset, img2id, id2img, img_similarity)
 
     # Encoder
