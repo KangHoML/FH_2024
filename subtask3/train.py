@@ -182,6 +182,13 @@ def train():
                 zero_prob=args.drop_prob,
                 use_multimodal=args.use_multimodal,
                 img_feat_size=4096)
+    
+    # SI Initialize
+    for n, p in net.named_parameters():
+            if p.requires_grad:
+                n = n.replace('.', '__')
+                net.register_buffer('{}_SI_prev_task'.format(n), p.detach().clone())
+                net.register_buffer('{}_SI_omega'.format(n), torch.zeros(p.shape))
 
     # checkpoint
     if args.ckpt is not None:
@@ -195,8 +202,12 @@ def train():
     criterion = CrossEntropyLoss()
     optimizer_type = get_optimizer()
     optimizer = optimizer_type(net.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    
+    # train
+    train_losses, ce_losses, si_losses = [], [], []
+    best_loss = float('inf')
+    net.to(device)
 
-    # Initialize SI parameter
     W = {}
     p_old = {}
     for n, p in net.named_parameters():
@@ -204,11 +215,6 @@ def train():
             n = n.replace('.', '__')
             W[n] = p.data.clone().zero_()
             p_old[n] = p.data.clone()
-    
-    # train
-    train_losses, ce_losses, si_losses = [], [], []
-    best_loss = float('inf')
-    net.to(device)
 
     for epoch in range(args.epoch):
         net.train()
@@ -263,7 +269,7 @@ def train():
         # loss가 가장 적은 모델 저장
         if train_loss < best_loss:
             best_loss = train_loss
-            torch.save(net.state_dict(), f'./pth/model_{args.seed}_final.pt')
+            torch.save(net.state_dict(), f'./pth/model_{args.seed}_best.pt')
 
         # ckpt에 따라 저장
         if epoch % args.save_freq == 0:
