@@ -117,19 +117,6 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
     np.random.seed(seed)
     random.seed(seed)
-
-def plot_loss(train_losses, ce_losses, si_losses):
-    plt.figure(figsize=(10, 5))
-    plt.plot(range(1, len(train_losses)+1), train_losses, label='Train Loss', marker='o')
-    plt.plot(range(1, len(ce_losses)+1), ce_losses, label='CE Loss', marker='s')
-    plt.plot(range(1, len(si_losses)+1), si_losses, label='SI Loss', marker='^')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-
-    plt.title(f"model_{args.seed} Loss Graph")
-    plt.legend()
-    plt.grid()
-    plt.savefig(f'./loss/model_{args.seed}.png')
         
 def train():
     # seed
@@ -189,7 +176,6 @@ def train():
             n = n.replace('.', '__')
             net.register_buffer('{}_SI_prev_task'.format(n), p.detach().clone())
             net.register_buffer('{}_SI_omega'.format(n), torch.zeros(p.shape))
-    print(net)                
     
     # checkpoint
     if args.ckpt is not None:
@@ -205,7 +191,6 @@ def train():
     optimizer = optimizer_type(net.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     
     # train
-    train_losses, ce_losses, si_losses = [], [], []
     best_loss = float('inf')
     net.to(device)
 
@@ -219,7 +204,7 @@ def train():
 
     for epoch in range(args.epoch):
         net.train()
-        train_loss, ce_loss_total, si_loss_total = 0, 0, 0
+        losses = []
 
         for batch in tqdm(train_loader):
             desc = batch['description'].to(device)
@@ -229,22 +214,20 @@ def train():
             optimizer.zero_grad()
 
             logits = net(desc, coordi)
-            loss_ce = criterion(logits, rank)
+            loss_ce = criterion(logits, rank) * args.batch_size
+            loss_ce = loss_ce.mean()
 
             if args.use_cl:
                 loss_si = surrogate_loss(net)
                 loss = loss_ce + si_c * loss_si
             else:
-                loss_si = 0.0
                 loss = loss_ce
 
             loss.backward()
             clip_grad_norm_(net.parameters(), args.max_grad_norm)
             optimizer.step()
 
-            train_loss += loss.item()
-            ce_loss_total += loss_ce.item()
-            si_loss_total += loss_si
+            losses.append(loss.item())
 
             # SI 관련 업데이트
             for n, p in net.named_parameters():
@@ -254,22 +237,15 @@ def train():
                         W[n].add_(-p.grad * (p.detach() - p_old[n]))
                     p_old[n] = p.detach().clone()
 
-        # 평균 loss 저장    
-        train_loss /= len(train_loader)
-        ce_loss_avg = ce_loss_total / len(train_loader)
-        si_loss_avg = si_loss_total / len(train_loader) if args.use_cl else 0
-
-        train_losses.append(train_loss)
-        ce_losses.append(ce_loss_avg)
-        si_losses.append(si_loss_avg)
+        # 평균 loss
+        avg_loss = sum(losses) / len(losses)
 
         # 출력
-        print(f"Epoch [{epoch+1}/{args.epoch}]")
-        print(f"    Train Loss: {train_loss:.4f}, CE Loss: {ce_loss_avg:.4f}, SI Loss: {si_loss_avg:.4f}")
+        print(f"Epoch [{epoch+1}/{args.epoch}], Loss: {avg_loss: .4f}")
 
         # loss가 가장 적은 모델 저장
-        if train_loss < best_loss:
-            best_loss = train_loss
+        if avg_loss < best_loss:
+            best_loss = avg_loss
             torch.save(net.state_dict(), f'./pth/model_{args.seed}_best.pt')
 
         # ckpt에 따라 저장
@@ -282,13 +258,9 @@ def train():
     # 최종 모델 저장
     torch.save(net.state_dict(), f'./pth/model_final.pt')
 
-    # Loss 그래프
-    plot_loss(train_losses, ce_losses, si_losses)
-
 if __name__ == "__main__":
     global args
     args = parser.parse_args()
 
     os.makedirs("pth", exist_ok=True)
-    os.makedirs("loss", exist_ok=True)
     train()

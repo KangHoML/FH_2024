@@ -6,7 +6,7 @@
 CUDA_VISIBLE_DEVICES="0" python3 eval.py --swer_path './sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat' \
                                          --meta_path '../../Dataset/subtask3/mdata.wst.txt.2023.08.23' \
                                          --batch_size 16 \
-                                         --ckpt './pth/model_final.pt' \
+                                         --ckpt 'model_final.pt' \
                                          --key_size 512 \
                                          --mem_size 16 \
                                          --hops 3 \

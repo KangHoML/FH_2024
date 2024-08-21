@@ -81,7 +81,7 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
-def evaluate(args):
+def evaluate():
     # seed
     set_seed(args.seed)
 
@@ -126,6 +126,13 @@ def evaluate(args):
                 use_multimodal=args.use_multimodal,
                 img_feat_size=4096)
     
+    # Initialize SI parameter
+    for n, p in net.named_parameters():
+        if p.requires_grad:
+            n = n.replace('.', '__')
+            net.register_buffer('{}_SI_prev_task'.format(n), p.detach().clone())
+            net.register_buffer('{}_SI_omega'.format(n), torch.zeros(p.shape))
+            
     # checkpoint
     if args.ckpt is not None:
         ckpt_path = os.path.join('./pth', args.ckpt)
@@ -170,3 +177,9 @@ def _calculate_weighted_kendall_tau(pred, label):
         total_count += 1
     
     return (total_corr / total_count)
+
+if __name__ == "__main__":
+    global args
+    args = parser.parse_args()
+
+    evaluate()

@@ -41,11 +41,8 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def main():
     """ The main function of the test process for performance measurement. """
-    # net = Baseline_ResNet_color().to(DEVICE)
-    # trained_weights = torch.load('./model/Baseline_ResNet_color/model_100.pt',map_location=DEVICE)
-    # net = Baseline_MNet_color().to(DEVICE)
-    net = ColorCNN().to(DEVICE)
-    trained_weights = torch.load('../model/ColorCNN/08-18/model_50.pt',map_location=DEVICE)
+    net = Baseline_MNet_color().to(DEVICE)
+    trained_weights = torch.load('../model/Baseline_MNet_color/08-12/model_30.pt',map_location=DEVICE)
     net.load_state_dict(trained_weights)
 
     # 아래 경로는 포함된 샘플(validation set)의 경로로, 실제 추론환경에서의 경로는 task.ipynb를 참고 바랍니다. 
@@ -67,10 +64,12 @@ def main():
         _, indx = out.max(1)
         pred_list = np.concatenate([pred_list, indx.cpu()], axis=0)
 
-    top_1, acsa = get_test_metrics(gt_list, pred_list)
+    top_1, acsa, class_accuracies = get_class_metrics(gt_list, pred_list)
     print("------------------------------------------------------")
-    print(
-        "Color: Top-1=%.5f, ACSA=%.5f" % (top_1, acsa))
+    print("Color: Top-1=%.5f, ACSA=%.5f" % (top_1, acsa))
+    print("Class-wise Accuracies:")
+    for i, acc in enumerate(class_accuracies):
+        print(f"Class {i}: {acc:.5f}")
     print("------------------------------------------------------")
     return top_1
 
@@ -95,6 +94,27 @@ def get_test_metrics(y_true, y_pred, verbose=True):
 
     return top_1, cs_accuracy.mean()
 
+def get_class_metrics(y_true, y_pred, verbose=True):
+    """
+    :return: top_1, cs_accuracy.mean(), class_accuracies
+    """
+    y_true, y_pred = y_true.astype(np.int8), y_pred.astype(np.int8)
+
+    cnf_matrix = confusion_matrix(y_true, y_pred)
+    if verbose:
+        print(cnf_matrix)
+
+    FP = cnf_matrix.sum(axis=0) - np.diag(cnf_matrix)
+    FN = cnf_matrix.sum(axis=1) - np.diag(cnf_matrix)
+    TP = np.diag(cnf_matrix)
+    TN = cnf_matrix.sum() - (FP + FN + TP)
+
+    top_1 = np.sum(TP)/np.sum(np.sum(cnf_matrix))
+    cs_accuracy = TP / cnf_matrix.sum(axis=1)
+
+    class_accuracies = cs_accuracy.tolist()  # 클래스별 정확도 리스트로 변환
+
+    return top_1, cs_accuracy.mean(), class_accuracies
 
 if __name__ == '__main__':
     main()

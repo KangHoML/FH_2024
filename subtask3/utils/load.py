@@ -242,9 +242,6 @@ class DialogueTestLoader:
         for i in range(len(intro_ids) - 1):
             prev, cur = intro_ids[i], intro_ids[i+1]
             stories.append(data[prev:cur])
-        
-        # 마지막 남은 대화 추가
-        stories.append(data[intro_ids[i+1]:])
 
         return stories
     
@@ -253,7 +250,7 @@ class DialogueTestLoader:
         description = [line.split('\t')[1].strip() for line in story[1:-3]]
         
         # 코디 저장
-        coordi = [line.split('\t')[1].strip() for line in story[-3:]]
+        coordi = [line.split('\t')[1].strip().split(" ") for line in story[-3:]]
 
         # 추천된 코디를 O, T, B, S 순서대로 정렬
         coordi = self._sort(coordi)
@@ -267,10 +264,13 @@ class DialogueTestLoader:
 
 
     def _sort(self, coordi: List) -> List:
+        # '_' 로 되어있는 데이터 존재
+        coordi = [[item.split("_")[-1] for item in c] for c in coordi]
+
         # O, T, B, S 순서로 정렬
         sorted_coordi = []
         for c in coordi:
-            sorted_coordi.append({position_of_fashion_item(item): item for item in c.split()})
+            sorted_coordi.append({position_of_fashion_item(item): item for item in c})
         
         # 더미 라벨 추가
         sorted_coordi = [self._add_dummy(c) for c in sorted_coordi]
