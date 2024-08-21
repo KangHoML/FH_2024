@@ -39,7 +39,6 @@ def collate_fn(batch):
     # 텐서로 변환
     desc_tensor = torch.tensor(np.array(desc_tensor), dtype=torch.float32)
     coordi_tensor = torch.tensor(np.array(coordi_tensor), dtype=torch.float32)
-    # coordi_tensor = torch.tensor(coordi_tensor, dtype=torch.long)
     
     if rank == None:
         batch_tensor = {"description": desc_tensor, "coordi": coordi_tensor}

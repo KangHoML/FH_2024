@@ -102,7 +102,7 @@ def evaluate(args):
     label_ranks = [data.pop("reward") for data in  val_raw_dataset]
 
     # Encoder
-    encoder = Encoder(swer=swer, img2id=img2id, num_coordi=4, mem_size=args.mem_size)
+    encoder = Encoder(swer=swer, img2id=img2id, num_coordi=4, mem_size=args.mem_size, meta_size=4)
     encoded_val_dataset = encoder(val_raw_dataset)
 
     # Dataset & DataLoader

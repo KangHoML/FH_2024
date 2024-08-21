@@ -159,7 +159,7 @@ def train():
     train_dataset = augmentation(train_dataset, img2id, id2img, img_similarity)
 
     # Encoder
-    encoder = Encoder(swer=swer, img2id=img2id, num_coordi=4, mem_size=args.mem_size)
+    encoder = Encoder(swer=swer, img2id=img2id, num_coordi=4, mem_size=args.mem_size, meta_size=4)
     encoded_train_dataset = encoder(train_dataset)
     
     # Dataset & DataLoader

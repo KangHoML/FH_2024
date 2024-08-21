@@ -21,13 +21,6 @@ class Encoder:
             else:
                 encoded_desc = [np.zeros(self.swer.get_emb_size()).tolist() for _ in range(self.mem_size - len(encoded_desc))] + encoded_desc
 
-            # 추천 코디를 인덱스 형태로 변환
-            # coordi = data["coordi"]
-            # encoded_coordi = []
-            # for c in coordi:
-            #     imgs = [self.img2id[pos][c[pos]] for pos in range(self.num_coordi)]
-            #     encoded_coordi.append(imgs)
-
             # 추천 코디 임베딩
             coordi = data["coordi"]
             encoded_coordi = self._embed_coordi(coordi)
