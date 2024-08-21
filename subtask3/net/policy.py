@@ -6,14 +6,10 @@ import math
 from collections import OrderedDict
 
 class PolicyNet(nn.Module):
-    """Class for policy network"""
     def __init__(self, emb_size, key_size, item_size, meta_size, 
                  coordi_size, eval_node, num_rnk, use_batch_norm, 
                  use_dropout, zero_prob, use_multimodal,
                  img_feat_size, name='PolicyNet'):
-        """
-        initialize and declare variables
-        """
         super().__init__()
         self._item_size = item_size
         self._emb_size = emb_size
@@ -29,10 +25,11 @@ class PolicyNet(nn.Module):
         self._num_hid_rnk = list(map(int, buf[1].split(',')))
         self._num_hid_layer_eval = len(self._num_hid_eval)
         self._num_hid_layer_rnk = len(self._num_hid_rnk)
-        
+
         mlp_eval_list = OrderedDict([])
         num_in = self._emb_size * self._meta_size * self._coordi_size \
                     + self._key_size
+        
         if use_multimodal:
             num_in += img_feat_size            
         self._count_eval = 0
@@ -77,31 +74,24 @@ class PolicyNet(nn.Module):
         self._mlp_rnk = nn.Sequential(mlp_rnk_list) 
 
     def _evaluate_coordi(self, crd, req):
-        """
-        evaluate candidates
-        """
         crd_and_req = torch.cat((crd, req), 1)
         evl = self._mlp_eval(crd_and_req)
         return evl
     
     def _ranking_coordi(self, in_rnk):
-        """
-        rank candidates         
-        """
         out_rnk = self._mlp_rnk(in_rnk)
         return out_rnk
-        
+    
     def forward(self, req, crd):
-        """
-        build graph for evaluation and ranking         
-        """
         crd_tr = torch.transpose(crd, 1, 0)
+
         for i in range(self._num_rnk):
             crd_eval = self._evaluate_coordi(crd_tr[i], req)
             if i == 0:
                 in_rnk = crd_eval
             else:
                 in_rnk = torch.cat((in_rnk, crd_eval), 1)
+        
         in_rnk = torch.cat((in_rnk, req), 1)
         out_rnk = self._ranking_coordi(in_rnk)
         return out_rnk

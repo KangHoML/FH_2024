@@ -222,7 +222,7 @@ def train():
             optimizer.zero_grad()
 
             logits = net(desc, coordi)
-            loss_ce = criterion(logits, rank) * args.batch_size
+            loss_ce = criterion(logits, rank)
 
             if args.use_cl:
                 loss_si = surrogate_loss(net)

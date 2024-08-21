@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from torch.utils.data import Dataset
 from typing import Any, Dict
 
@@ -36,8 +37,9 @@ def collate_fn(batch):
         if rank != None: rank_tensor.append(rank)
 
     # 텐서로 변환
-    desc_tensor = torch.tensor(desc_tensor, dtype=torch.float32)
-    coordi_tensor = torch.tensor(coordi_tensor, dtype=torch.long)
+    desc_tensor = torch.tensor(np.array(desc_tensor), dtype=torch.float32)
+    coordi_tensor = torch.tensor(np.array(coordi_tensor), dtype=torch.float32)
+    # coordi_tensor = torch.tensor(coordi_tensor, dtype=torch.long)
     
     if rank == None:
         batch_tensor = {"description": desc_tensor, "coordi": coordi_tensor}
