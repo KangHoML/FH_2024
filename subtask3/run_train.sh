@@ -6,7 +6,7 @@
 CUDA_VISIBLE_DEVICES="0" python3 train.py --swer_path './sstm_v0p5_deploy/sstm_v4p49_np_n36134_d128.dat' \
                                           --meta_path '../../Dataset/subtask3/mdata.wst.txt.2023.08.23' \
                                           --num_aug 5 \
-                                          --top_k 50 \
+                                          --threshold 0.7 \
                                           --batch_size 16 \
                                           --key_size 512 \
                                           --mem_size 16 \
