@@ -50,4 +50,4 @@ def surrogate_loss(_model):
         return sum(losses)
     except AttributeError:
         # SI-loss is 0 if there is no stored omega yet
-        return torch.tensor(0., device=_model._device())
+        return torch.tensor(0., device=next(iter(_model.parameters())).device)
