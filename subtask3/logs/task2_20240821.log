@@ -34,3 +34,5 @@ Traceback (most recent call last):
   File "/workspace/ETRI/FH_2024/subtask3/train.py", line 244, in train
     train_loss += loss.item()
 KeyboardInterrupt
+Running Task 2
+Training for Task 2

@@ -128,3 +128,18 @@ TypeError: can't convert cuda:0 device type tensor to numpy. Use Tensor.cpu() to
 Evaluating on Task 1
 Task 1 completed
 ------------------------
+Running Task 1
+Training for Task 1
+Epoch [1/10]
+Epoch [2/10]
+Epoch [3/10]
+Epoch [4/10]
+Epoch [5/10]
+Epoch [6/10]
+Epoch [7/10]
+Epoch [8/10]
+Epoch [9/10]
+Epoch [10/10]
+Evaluating on Task 1
+Task 1 completed
+------------------------
