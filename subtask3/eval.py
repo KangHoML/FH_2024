@@ -99,7 +99,7 @@ def evaluate():
     # Validation Dialogue
     val_diag_loader = DialogueTestLoader(path=args.val_diag_path, eval=True, num_rank=3)
     val_raw_dataset = val_diag_loader.get_dataset()
-    label_ranks = [data.pop("reward") for data in  val_raw_dataset]
+    label_ranks = [data.pop("reward") for data in val_raw_dataset]
 
     # Encoder
     encoder = Encoder(swer=swer, img2id=img2id, num_coordi=4, mem_size=args.mem_size, meta_size=4)
@@ -152,7 +152,7 @@ def evaluate():
             coordi = batch["coordi"].to(device)
             
             logits = net(desc, coordi)
-            preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
+            preds = preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
 
             ranks = []
             for pred in preds:

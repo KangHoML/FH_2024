@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 공통 경로 설정
-DATA_PATH="../../Dataset/subtask3"
+DATA_PATH="/home/ho/workspace/datasets/FH_2024/subtask3"
 
 # 현재 날짜와 시간
 TIMESTAMP=$(date +"%Y%m%d")

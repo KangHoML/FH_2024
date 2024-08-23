@@ -127,33 +127,41 @@ def train():
     print(f"\nDevice: {device}")
 
     # Subword Embedding
+    print("\nSubword embedding...")
     swer = SubWordEmbReaderUtil(args.swer_path)
 
     # Meta Data
+    print("\nLoading meta data...")
     meta_loader = MetaLoader(path=args.meta_path, swer=swer)
     img2id, id2img, img_similarity = meta_loader.get_dataset()
 
     # Train Dialogue
+    print("\nLoading train dialogue...")
     train_diag_loader = DialogueTrainLoader(path=args.train_diag_path)
     train_raw_dataset = train_diag_loader.get_dataset()
 
     # Preprocess
+    print("\nPreprocess train dialogue...")
     preprocessor = Preprocessor(num_rank=3, num_coordi=4, top_k=args.top_k)
     train_dataset = preprocessor(train_raw_dataset, img2id, id2img, img_similarity)
 
     # Augmentation
+    print("\nAugment train data...")
     augmentation = Augmentation(num_aug=args.num_aug, num_rank=3, num_coordi=4, top_k=args.top_k)
     train_dataset = augmentation(train_dataset, img2id, id2img, img_similarity)
 
     # Encoder
+    print("\nEncoding...")
     encoder = Encoder(swer=swer, img2id=img2id, num_coordi=4, mem_size=args.mem_size, meta_size=4)
     encoded_train_dataset = encoder(train_dataset)
     
     # Dataset & DataLoader
+    print("\nInitialize Dataset & DataLoader")
     train_dataset = FH2024Dataset(dataset=encoded_train_dataset)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=4, collate_fn=collate_fn)
 
     # Model Initialize
+    print("\nInitialize the model")
     item_size = [len(img2id[i]) for i in range(4)]
     net = Model(emb_size=swer.get_emb_size(), 
                 key_size=args.key_size, 
@@ -179,6 +187,7 @@ def train():
     
     # checkpoint
     if args.ckpt is not None:
+        print("\nLoad the Model...")
         ckpt_path = os.path.join('./pth', args.ckpt)
         net.load_state_dict(torch.load(ckpt_path))
         for n, p in net.named_parameters():
@@ -202,9 +211,10 @@ def train():
             W[n] = p.data.clone().zero_()
             p_old[n] = p.data.clone()
 
+    print("\nTraining...\n")
     for epoch in range(args.epoch):
         net.train()
-        losses = []
+        avg_loss, acc = 0.0, 0.0
 
         for batch in tqdm(train_loader):
             desc = batch['description'].to(device)
@@ -227,7 +237,9 @@ def train():
             clip_grad_norm_(net.parameters(), args.max_grad_norm)
             optimizer.step()
 
-            losses.append(loss.item())
+            avg_loss += loss.item()
+            preds = torch.argmax(logits, 1)
+            acc += torch.sum(rank == preds).item() 
 
             # SI 관련 업데이트
             for n, p in net.named_parameters():
@@ -238,10 +250,11 @@ def train():
                     p_old[n] = p.detach().clone()
 
         # 평균 loss
-        avg_loss = sum(losses) / len(losses)
+        avg_loss /= len(train_loader)
+        acc /= len(train_loader)
 
         # 출력
-        print(f"Epoch [{epoch+1}/{args.epoch}], Loss: {avg_loss: .4f}")
+        print(f"Epoch [{epoch+1}/{args.epoch}], Loss: {avg_loss: .4f}, Acc: {acc: .4f}")
 
         # loss가 가장 적은 모델 저장
         if avg_loss < best_loss:

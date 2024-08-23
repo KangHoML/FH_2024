@@ -32,7 +32,6 @@ class PolicyNet(nn.Module):
         
         if use_multimodal:
             num_in += img_feat_size            
-        self._count_eval = 0
         for i in range(self._num_hid_layer_eval):
             num_out = self._num_hid_eval[i]
             mlp_eval_list.update({ 
@@ -45,7 +44,6 @@ class PolicyNet(nn.Module):
             if self._use_dropout:
                 mlp_eval_list.update({
                     'layer%s_dropout'%(i+1): nn.Dropout(p=self._zero_prob)})
-            self._count_eval += (num_in * num_out + num_out)            
             num_in = num_out
         self._eval_out_node = num_out 
         self._mlp_eval = nn.Sequential(mlp_eval_list) 
@@ -54,7 +52,7 @@ class PolicyNet(nn.Module):
         num_in = self._eval_out_node * self._num_rnk + self._key_size
         for i in range(self._num_hid_layer_rnk+1):
             if i == self._num_hid_layer_rnk:
-                num_out = math.factorial(self._num_rnk)
+                num_out = self._num_rnk
                 mlp_rnk_list.update({ 
                     'layer%s_linear'%(i+1): nn.Linear(num_in, num_out)}) 
             else:
@@ -69,7 +67,6 @@ class PolicyNet(nn.Module):
                 if self._use_dropout:
                     mlp_rnk_list.update({
                     'layer%s_dropout'%(i+1): nn.Dropout(p=self._zero_prob)})
-            self._count_eval += (num_in * num_out + num_out)
             num_in = num_out
         self._mlp_rnk = nn.Sequential(mlp_rnk_list) 
 

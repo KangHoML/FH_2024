@@ -4,15 +4,7 @@ import pickle
 import numpy as np
 
 class SubWordEmbReaderUtil:
-    """
-    Class for subword embedding    
-    """
     def __init__(self, data_path):
-        """
-        initialize    
-        """
-        print('\n<Initialize subword embedding>')
-        print ('loading=', data_path)
         with open(data_path, 'rb') as fp:
             self._subw_length_min = pickle.load(fp)
             self._subw_length_max = pickle.load(fp)
@@ -21,15 +13,9 @@ class SubWordEmbReaderUtil:
             self._emb_size = self._emb_np.shape[1]
 
     def get_emb_size(self):
-        """
-        get embedding size    
-        """
         return self._emb_size        
 
     def _normalize_func(self, s):
-        """
-        normalize
-        """
         s1 = re.sub(' ', '', s)
         s1 = re.sub('\n', 'e', s1)
         sl = list(s1)
@@ -40,9 +26,6 @@ class SubWordEmbReaderUtil:
         return s1
 
     def _word2syllables(self, word):
-        """
-        word to syllables
-        """
         syl_list = []
 
         dec = codecs.lookup('cp949').incrementaldecoder()
@@ -52,9 +35,6 @@ class SubWordEmbReaderUtil:
         return syl_list
 
     def _get_cngram_syllable_wo_dic(self, word, min, max):
-        """
-        get syllables
-        """
         word = word.replace('_', '')
         p_syl_list = self._word2syllables(word.upper())  
         subword = []
@@ -70,9 +50,6 @@ class SubWordEmbReaderUtil:
         return subword
 
     def _get_word_emb(self, w):
-        """
-        do word embedding
-        """
         word = w.strip()
         assert len(word) > 0
         cng = self._get_cngram_syllable_wo_dic(word, self._subw_length_min, 
@@ -83,9 +60,6 @@ class SubWordEmbReaderUtil:
         return d
 
     def get_sent_emb(self, s):
-        """
-        do sentence embedding
-        """
         if s != '':
             s = s.strip().split()
             semb_tmp = []

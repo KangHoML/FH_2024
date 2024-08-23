@@ -25,5 +25,5 @@ class Model(nn.Module):
     def forward(self, dlg, crd):
         req = self._requirement(dlg)
         logits = self._policy(req, crd)
-        
+
         return logits
