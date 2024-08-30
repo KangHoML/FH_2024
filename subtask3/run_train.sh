@@ -11,17 +11,17 @@ CUDA_VISIBLE_DEVICES="0" python3 train.py --swer_path './sstm_v0p5_deploy/sstm_v
                                           --key_size 512 \
                                           --mem_size 16 \
                                           --hops 3 \
-                                          --eval_node '[6000,6000,6000,200][2000,2000]' \
+                                          --eval_node '[6000,6000,200][2000]' \
                                           --drop_prob 0.1 \
                                           --use_batch_norm False \
                                           --use_dropout True \
                                           --use_multimodal False \
                                           --use_cl True \
-                                          --optimizer 'SGD' \
-                                          --learning_rate 1e-5 \
-                                          --weight_decay 1e-3 \
-                                          --epoch 10 \
-                                          --max_grad_norm 20.0 \
+                                          --optimizer 'AdamW' \
+                                          --learning_rate 5e-3 \
+                                          --weight_decay 0 \
+                                          --epoch 3 \
+                                          --max_grad_norm 0 \
                                           --save_freq 2 \
                                           $1 $2 \
                                           $3 $4

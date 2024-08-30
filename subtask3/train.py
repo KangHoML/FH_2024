@@ -214,8 +214,7 @@ def train():
     print("\nTraining...\n")
     for epoch in range(args.epoch):
         net.train()
-        avg_loss, acc = 0.0, 0.0
-
+        losses = []
         for batch in tqdm(train_loader):
             desc = batch['description'].to(device)
             coordi = batch['coordi'].to(device)
@@ -224,8 +223,7 @@ def train():
             optimizer.zero_grad()
 
             logits = net(desc, coordi)
-            loss_ce = criterion(logits, rank) * args.batch_size
-            loss_ce = loss_ce.mean()
+            loss_ce = criterion(logits, rank)
 
             if args.use_cl:
                 loss_si = surrogate_loss(net)
@@ -236,10 +234,7 @@ def train():
             loss.backward()
             clip_grad_norm_(net.parameters(), args.max_grad_norm)
             optimizer.step()
-
-            avg_loss += loss.item()
-            preds = torch.argmax(logits, 1)
-            acc += torch.sum(rank == preds).item() 
+            losses.append(loss)
 
             # SI 관련 업데이트
             for n, p in net.named_parameters():
@@ -250,15 +245,14 @@ def train():
                     p_old[n] = p.detach().clone()
 
         # 평균 loss
-        avg_loss /= len(train_loader)
-        acc /= len(train_loader)
+        train_loss = torch.mean(torch.tensor(losses))
 
         # 출력
-        print(f"Epoch [{epoch+1}/{args.epoch}], Loss: {avg_loss: .4f}, Acc: {acc: .4f}")
+        print(f"Epoch [{epoch+1}/{args.epoch}], Loss: {train_loss: .4f}")
 
         # loss가 가장 적은 모델 저장
-        if avg_loss < best_loss:
-            best_loss = avg_loss
+        if train_loss < best_loss:
+            best_loss = train_loss
             torch.save(net.state_dict(), f'./pth/model_{args.seed}_best.pt')
 
         # ckpt에 따라 저장

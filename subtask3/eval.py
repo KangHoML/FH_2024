@@ -152,7 +152,7 @@ def evaluate():
             coordi = batch["coordi"].to(device)
             
             logits = net(desc, coordi)
-            preds = preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
+            preds = torch.argsort(logits, -1, descending=True).detach().cpu().numpy()
 
             ranks = []
             for pred in preds:
