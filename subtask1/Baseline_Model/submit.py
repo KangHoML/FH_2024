@@ -55,11 +55,12 @@ def submit():
 
 import aifactory.score as aif
 import time
+import key
 t = time.time()
 if __name__ == "__main__":
     #-----------------------------------------------------#
     aif.submit(model_name="augument_sharpness",             # 본인의 모델명 입력(버전 관리에 용이하게끔 편의에 맞게 지정합니다)
-               key="5db975da-7cc5-4b68-88b0-b2ad90576d42",                                   # 본인의 task key 입력
+               key=key.Base_config['key'],                    # 본인의 task key 입력
                func=submit                                 # 3.에서 wrapping한 submit function
                )
     #-----------------------------------------------------#
